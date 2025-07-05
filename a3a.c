@@ -29,6 +29,15 @@ static ListNode* parse_list(char *line) {
         if (p == end) break;
         
         ListNode *node = malloc(sizeof *node);
+        if (!node) {
+            // Free already allocated nodes on malloc failure
+            while (head) {
+                ListNode *temp = head;
+                head = head->next;
+                free(temp);
+            }
+            return NULL;
+        }
         node->val = (int)v;
         node->next = NULL;
         if (!head) head = tail = node;
@@ -65,7 +74,21 @@ int main(int argc, char **argv) {
         ListNode *l = parse_list(line);
         if (n == cap) {
             cap = cap ? cap * 2 : 4;
-            lists = realloc(lists, cap * sizeof *lists);
+            ListNode **new_lists = realloc(lists, cap * sizeof *lists);
+            if (!new_lists) {
+                // Clean up on realloc failure
+                for (int i = 0; i < n; i++) {
+                    while (lists[i]) {
+                        ListNode *temp = lists[i];
+                        lists[i] = lists[i]->next;
+                        free(temp);
+                    }
+                }
+                free(lists);
+                fclose(f);
+                return 1;
+            }
+            lists = new_lists;
         }
         lists[n++] = l;
     }
@@ -89,12 +112,11 @@ int main(int argc, char **argv) {
 
     printf("[");
     ListNode *cur = dummy.next;
-    if (cur) {
-        printf("%d", cur->val);
-        cur = cur->next;
-    }
+    int first = 1;
     while (cur) {
-        printf(", %d", cur->val);
+        if (!first) printf(", ");
+        printf("%d", cur->val);
+        first = 0;
         ListNode *tmp = cur;
         cur = cur->next;
         free(tmp);
