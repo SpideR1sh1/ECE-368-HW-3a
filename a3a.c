@@ -30,7 +30,6 @@ static ListNode* parse_list(char *line) {
         
         ListNode *node = malloc(sizeof *node);
         if (!node) {
-            // Free already allocated nodes on malloc failure
             while (head) {
                 ListNode *temp = head;
                 head = head->next;
@@ -76,7 +75,6 @@ int main(int argc, char **argv) {
             cap = cap ? cap * 2 : 4;
             ListNode **new_lists = realloc(lists, cap * sizeof *lists);
             if (!new_lists) {
-                // Clean up on realloc failure
                 for (int i = 0; i < n; i++) {
                     while (lists[i]) {
                         ListNode *temp = lists[i];
